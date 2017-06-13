@@ -1,6 +1,6 @@
 {
   "development": {
-    "database": "database_development",
+    "database": "aae_dev",
     "dialect": "postgres"
   },
   "test": {
