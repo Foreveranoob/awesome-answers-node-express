@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { Question } = require('../models');
 
-// Questions#index PATH: /questions/METHOD: get
+// questions#index PATH: /questions/ METHOD: get
 router.get('/', (req, res) => {
   Question
     .findAll()
@@ -13,6 +13,30 @@ router.get('/', (req, res) => {
       // as variables inside the template
       res.render('questions/index', {questions: questions});
     });
+});
+
+// questions#new PATH: /questions/new METHOD: get
+router.get('/new', (req, res) => {
+  const question = Question.build();
+  res.render('questions/new', {question: question});
+});
+
+// questions#create PATH: /questions METHOD: post
+router.post('/', (req, res) => {
+  // We destructure the values of the form inputs
+  // from req.body to make sure that we only get attributes
+  // that we want for creating a Question
+  const { title, description } = req.body
+  Question
+    .create({ title, description })
+  // ð is syntax sugar for ð
+  // { title: title, description: description }
+    .then(question => {
+      res.redirect(`/questions/${question.id}`);
+    })
+    .catch(error => {
+      next(error);
+    })
 });
 
 // questions#show PATH: /questions/:id METHOD: get
@@ -25,19 +49,31 @@ router.get('/', (req, res) => {
 // of the promise.
 
 // async function () {}
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   // To get params from your url (i.e. /:id),
   // grab them the params property on the request object
   // as shown below ð
   const { id } = req.params;
-  const question = await Question.findById(id);
-  res.render('questions/show', {question: question});
+  // try .. catch block is javascript from catching errors.
+  // In other words, we can use this syntax preventing our
+  // application from crashing when error occurs
+  try {
+    // put the code that might crash inside of the try block
+    const question = await Question.findById(id);
+    res.render('questions/show', {question: question});
+  } catch (error) {
+    // the `error` variable will hold the error object
+    // describing what happened
+    // if it craches, do something here instead
+    next(error);
+  }
 });
+
 
 // ð version of the above ð route without an
 // async/await function
 /*
-router.get('/:id', (req, res) => {
+router.get('/:id', (req, res, next) => {
   // To get params from your url (i.e. /:id),
   // grab them the params property on the request object
   // as shown below ð
@@ -46,7 +82,10 @@ router.get('/:id', (req, res) => {
     .findById(id)
     .then(question => {
       res.send(question);
-    });
+    })
+    .catch(error => {
+      next(error);
+    })
 });
 */
 
