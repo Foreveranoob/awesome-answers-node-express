@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const answers = require('./answers');
 
 const { Question } = require('../models');
 
 // questions#index PATH: /questions/ METHOD: get
 router.get('/', (req, res) => {
   Question
-    .findAll()
+    .findAll({
+      order: [['createdAt', 'DESC']]
+    })
     .then(questions => {
       // passing a second argument to the render of the response
       // object will make available all its properties
@@ -22,7 +25,8 @@ router.get('/new', (req, res) => {
 });
 
 // questions#create PATH: /questions METHOD: post
-router.post('/', (req, res) => {
+// router.post('/', questionCreate);
+router.post('/', (req, res, next) => {
   // We destructure the values of the form inputs
   // from req.body to make sure that we only get attributes
   // that we want for creating a Question
@@ -36,7 +40,7 @@ router.post('/', (req, res) => {
     })
     .catch(error => {
       next(error);
-    })
+    });
 });
 
 // questions#show PATH: /questions/:id METHOD: get
@@ -60,7 +64,10 @@ router.get('/:id', async (req, res, next) => {
   try {
     // put the code that might crash inside of the try block
     const question = await Question.findById(id);
-    res.render('questions/show', {question: question});
+    const answers = await question.getAnswers({
+      order: [['updatedAt', 'DESC']]
+    });
+    res.render('questions/show', {question, answers});
   } catch (error) {
     // the `error` variable will hold the error object
     // describing what happened
@@ -88,5 +95,8 @@ router.get('/:id', (req, res, next) => {
     })
 });
 */
+
+// PATH: /questions/:questionId/answers/... METHOD: all of them
+router.use('/:questionId/answers', answers);
 
 module.exports = router;
